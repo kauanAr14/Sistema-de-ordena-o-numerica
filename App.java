@@ -6,8 +6,13 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 public class App {
+    static Map<String, Double> tempos = new LinkedHashMap<>();
     static String[] algoritmos = {
         "Bubble Sort",
         "Merge Sort",
@@ -18,10 +23,52 @@ public class App {
     // ===================== LÓGICA (inalterada) =====================
 
     public static int[] bubbleSort(int[] numeros) {
+        for (int i = 0; i < numeros.length - 1; i++) {
+
+        for (int j = 0; j < numeros.length - 1 - i; j++) {
+
+            if (numeros[j] > numeros[j + 1]) {
+
+                int temporario = numeros[j];
+                numeros[j] = numeros[j + 1];
+                numeros[j + 1] = temporario;
+            }
+        }
+    }
         return numeros;
     }
 
     public static int[] mergeSort(int[] numeros) {
+          if (numeros.length <= 1) {
+        return numeros;
+    }
+
+    int meio = numeros.length / 2;
+
+    int[] esquerda = Arrays.copyOfRange(numeros, 0, meio);
+    int[] direita = Arrays.copyOfRange(numeros, meio, numeros.length);
+
+    mergeSort(esquerda);
+    mergeSort(direita);
+
+    int i = 0, j = 0, k = 0;
+
+    while (i < esquerda.length && j < direita.length) {
+        if (esquerda[i] <= direita[j]) {
+            numeros[k++] = esquerda[i++];
+        } else {
+            numeros[k++] = direita[j++];
+        }
+    }
+
+    while (i < esquerda.length) {
+        numeros[k++] = esquerda[i++];
+    }
+
+    while (j < direita.length) {
+        numeros[k++] = direita[j++];
+    }
+
         return numeros;
     }
 
@@ -46,8 +93,39 @@ public class App {
     }
 
     public static int[] insertionSort(int[] numeros) {
+         for (int i = 1; i < numeros.length; i++) {
+
+        int atual = numeros[i];
+        int j = i - 1;
+
+        while (j >= 0 && numeros[j] > atual) {
+            numeros[j + 1] = numeros[j];
+            j--;
+        }
+
+        numeros[j + 1] = atual;
+    }
         return numeros;
     }
+    public static void registrarTempo(
+        String algoritmo,
+        double tempo,
+        JTextArea campoHistorico) {
+
+    tempos.put(algoritmo, tempo);
+
+    StringBuilder texto = new StringBuilder();
+
+    for (Map.Entry<String, Double> registro : tempos.entrySet()) {
+
+        texto.append(registro.getKey())
+             .append(": ")
+             .append(String.format("%.6f", registro.getValue()))
+             .append(" ms\n");
+    }
+
+    campoHistorico.setText(texto.toString());
+}
 
     // ===================== ESTILO (novo) =====================
 
@@ -184,6 +262,18 @@ public class App {
         campoResultado.setWrapStyleWord(true);
         campoResultado.setBorder(new EmptyBorder(10, 12, 10, 12));
 
+        JLabel tituloHistorico = criarRotulo("Comparação de tempos:");
+
+        JTextArea campoHistorico = new JTextArea(5, 20);
+        campoHistorico.setEditable(false);
+        campoHistorico.setFont(new Font("Monospaced", Font.PLAIN, 13));
+        campoHistorico.setForeground(COR_TEXTO);
+        campoHistorico.setBackground(COR_CARD);
+        campoHistorico.setBorder(bordaCampo());
+
+        JScrollPane rolagemHistorico = new JScrollPane(campoHistorico);
+        rolagemHistorico.setAlignmentX(Component.LEFT_ALIGNMENT);
+
         JScrollPane rolagem = new JScrollPane(campoResultado);
         rolagem.setBorder(new LineBorder(COR_BORDA, 1, true));
         rolagem.getViewport().setBackground(COR_CARD);
@@ -237,6 +327,9 @@ public class App {
         painel.add(Box.createVerticalStrut(18));
         painel.add(mensagem3);
         painel.add(rolagem);
+        painel.add(Box.createVerticalStrut(15));
+        painel.add(tituloHistorico);
+        painel.add(rolagemHistorico);   
 
         // Enter no campo de texto aciona o botão
         janela.getRootPane().setDefaultButton(botao);
@@ -301,6 +394,9 @@ public class App {
 
                 long fim = System.nanoTime();
                 long tempoGasto = fim - inicio;
+                double tempoMs = tempoGasto / 1_000_000.0;
+
+                    registrarTempo(metodoEscolhido, tempoMs, campoHistorico);
 
                 campoResultado.setText(
                     Arrays.toString(resultado)
